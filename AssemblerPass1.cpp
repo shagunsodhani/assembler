@@ -1,6 +1,6 @@
 /* This contains the code for the two passes of the assembler
  * */
- 
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -100,6 +100,31 @@ bool CheckOPTAB(string a)
        if(OPTAB[i][0]==a)
        return 1;
     return 0;
+}
+// To check for a comma
+bool CheckCOMMA(string a)
+{
+    for(int i=0;i<a.length();i++)
+    {
+        if(a[i]==',')
+        return 1;
+    }
+    return 0;
+}
+// To take up the label before comma
+string takelabel(string a)
+{
+    int c=0;
+    for(int i =0;i<a.length();i++)
+    {
+
+        if(a[i]==',')
+        break;
+        c++;
+    }
+    string b = a.substr(0,c);
+    return b;
+
 }
 
 // To check format 3 OR 4
@@ -237,36 +262,53 @@ int main()
                 loc=add(loc,"2");
                 break;
             }
-            case 3://Format 3 : allowed 
+            case 3://Format 3 : allowed
             {
-                if(CheckDir_Indir(n[i][3])==2&&!CheckSYMTAB(n[i][3]))  //To check the addressing
-                {
-						Insert_SYMTAB(n[i][3]);
-						n[i][5]="0";
-						if(n[i][1]!="")
-						{
-							Insert_SYMTAB(n[i][1]);
-							Insert_SYMTAB_Addr(n[i][1],loc);
-						}
-				}
-                else if(CheckDir_Indir(n[i][3])==0)
-					{
-							n[i][5]="1"; //Immediate addressing
+                if(CheckDir_Indir(n[i][3])==2&&!CheckCOMMA(n[i][3]))  //
+                   {
+                       if(!CheckSYMTAB(n[i][3]))
+                       {
+                           Insert_SYMTAB(n[i][3]);
+                       }
+                       n[i][5]="0";
+                       if(n[i][1]!="")
+                        {
+                           Insert_SYMTAB(n[i][1]);
+                           Insert_SYMTAB_Addr(n[i][1],loc);
+                         }
+                   }
+                   else if(CheckDir_Indir(n[i][3])==2&& CheckCOMMA(n[i][3]))
+                   {
+                       string p1 = takelabel(n[i][3]);
+                       if(!CheckSYMTAB(p1))
+                       {
+                          Insert_SYMTAB(p1);
+                       }
+                       if(n[i][1]!="")
+                       {
+                           Insert_SYMTAB(n[i][1]);
+                           Insert_SYMTAB_Addr(n[i][1],loc);
+                       }
+                       n[i][5]="8";
+                   }
+                   else if(CheckDir_Indir(n[i][3])==0)
+                        {
+                            n[i][5]="1"; //Immediate addressing
                             n[i][6]=n[i][3].substr(1,n[i][3].length());// This is to modify 12 to 012
                             string temp;
                             for(int j=0;j<(3-n[i][6].length());j++)
                             temp+="0";
                             n[i][6]=temp+n[i][6];
-                     }
-                else if(CheckDir_Indir(n[i][3])==1)
-                     {
-								n[i][5]="2"; //Indirect addressing
+                        }
+                        else if(CheckDir_Indir(n[i][3])==1)
+                             {
+                                 n[i][5]="2"; //Indirect addressing
                                 n[i][3]=n[i][3].substr(1,n[i][3].length());// This is to modify 12 to 012
-								string temp;
-								for(int j=0;j<(3-temp.length());j++)
-								temp+="0";
-								n[i][6]=temp+n[i][3];
-                       }
+                            string temp;
+                            for(int j=0;j<(3-temp.length());j++)
+                            temp+="0";
+                            n[i][6]=temp+n[i][3];
+                            }
                 loc=add(loc,"3");
                 break;
             }
@@ -326,15 +368,17 @@ int main()
     int c=0;
     cout<<endl;
     cout<<"SYMTAB is"<<endl;
-    while(SYMTAB[c][0]!="END")//To print the symbol table
+     while(SYMTAB[c][0]!="END")
     {
         cout<<setfill(' ')<<setw(8)<<SYMTAB[c][0]<<"  "<<setw(8)<<SYMTAB[c][1]<<endl;
         c++;
     }
-    cout<<"END"<<endl;
-    
+    SYMTAB[c][0]="END";
+    SYMTAB[c][1]=loc;
+            cout<<setfill(' ')<<setw(8)<<SYMTAB[c][0]<<"  "<<setw(8)<<SYMTAB[c][1]<<endl;
+
     // Code for PASS 2 begins here
-    
+
     cout<<"Code for PASS 2 begins here"<<endl;
     for(int i=1;i<count;i++)
     {
@@ -356,6 +400,18 @@ int main()
          {
             n[i][6]=add(OPCode(n[i][2].substr(1,n[i][3].length())),"3")+"10"+SYMField(n[i][3]);
          }
+          else if(n[i][5]=="8")// this is for buffer,x
+         {
+            string p1=takelabel(n[i][3]);
+             string temp1;
+             string temp=add(OPCode(n[i][2]),"3");
+             temp=temp+"A";
+             temp1=difference(SYMField(p1),n[i+1][0]);
+             temp1=temp1.substr(1,temp1.length());
+             temp=temp+temp1;
+             n[i][6]=temp;
+         }
+
          else if(n[i][4]=="3")//format 3
          {
                           //temp1=difference(SYMField(n[i][6]),n[i+1][0]);
@@ -413,7 +469,7 @@ vector<string> explode( const string &delimiter, const string &str)//This is the
     int delleng = delimiter.length();
     if (delleng==0)
         return arr;//no change
-        
+
     int i=0;
     int k=0;
     while( i<strleng )
