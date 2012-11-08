@@ -440,26 +440,68 @@ int main()
                 cout<<endl;
         }
     // Generating an Object Program
+
+    int y1=0,u1=0,u,t1=1,c1=0;
+    string flag, f1;
+    for(int g=0;;g++)
+    {
+        if(n[g][4]=="2" || n[g][4]=="3"|| n[g][4]=="4")
+        {
+            flag=n[g][0];
+            break;
+        }
+    }
+    f1=flag;
     ofstream out;
+    string interm_Addr=ProgAddr;
     out.open("OUTPUT.txt");
     out<<"H|"<<setfill(' ')<<setw(6)<<n[0][1]<<"|"<<setfill('0')<<setw(6)<<ProgAddr<<"|"<<setw(6)<<ProgLength<<endl;
-    out<<"T|";
-    out<<setfill('0')<<setw(6)<<ProgAddr<<"|1E|";
-    for(int i=1;i<count;i++)
+    while(y1==0)
     {
-        if(n[i][4]=="3"||n[i][4]=="4")
+            c1=0;
+            for(u=u1;;u++)
+            {
+                    if (n[u][4]=="2")
+                    c1+=2;
+                    else if (n[u][4]=="3")
+                    c1+=3;
+                    else if(n[u][4]=="4")
+                    c1+=4;
+                    else if(c1!=0)
+                    break;
+
+                    if(c1==30 || u>count)
+                    break;
+
+            }
+            u1=u+1;
+            if(c1<=30)
+            y1=1;
+    out<<"T|";
+    out<<setfill('0')<<setw(6)<<flag<<"|"<<setw(2)<<hexcnvt2(c1)<<"|";
+    for(int i=t1;i<=u;i++)
+    {
+        if(n[i][4]=="2"||n[i][4]=="3"||n[i][4]=="4")
         out<<n[i][6]<<"|";
     }
     out<<endl;
+    t1=u+1;
+    while(n[t1][4]!="2" && n[t1][4]!="3" && n[t1][4]!="4" && n[t1][4]!="")
+    {
+            t1=t1+1;
+    }
+    flag=n[t1][0];
+    if(u<count)
+    y1=0;
+    }
+
     for(int i=1;i<count;i++)
     {
         if(n[i][4]=="4")
         out<<"M|"<<setfill('0')<<setw(6)<<n[i][0]<<"|05"<<endl;
     }
-    out<<"E|"<<setfill('0')<<setw(6)<<ProgAddr<<endl;
-
+    out<<"E|"<<setfill('0')<<setw(6)<<f1<<endl;
     cout<<"Program Length is "<<ProgLength<<endl;
-
 }
 
 vector<string> explode( const string &delimiter, const string &str)//This is the function to break the string ( similar to explode function of php)
