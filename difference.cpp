@@ -37,4 +37,3 @@ string difference(string string1,string string2)
     }
         return a;
 }
-#endif
