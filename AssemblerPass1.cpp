@@ -1,22 +1,29 @@
+/* This contains the code for the two passes of the assembler
+ * */
+ 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <fstream>
 #include <cstdlib>
 #include <iomanip>
+
 using namespace std;
+
 #include "OPTAB.H"
 #include "adder.cpp"
 #include "variables.cpp"
 #include "subtract.cpp"
 #include "check.cpp"
 #include "difference.cpp"
+
+string n[20][7];
 // First Column Adddress Second Column Label
 // Third Column Operation
 // Fourth Column Operation Field
 // Fifth Format Specification
 // Six Final Opcode
-string n[20][7];
+
 // TO return address corresponding to LABEL
 string SYMField(string a)
 {
@@ -27,6 +34,7 @@ string SYMField(string a)
     }
     return SYMTAB[c][1];
 }
+
 // To return OPCODE
 string OPCode(string a)
 {
@@ -36,6 +44,7 @@ string OPCode(string a)
         return OPTAB[i][1];
     }
 }
+
 //String Conversion to Hexadecimal
 string hexcnvt2(int p)
 {
@@ -65,30 +74,34 @@ string hexcnvt2(int p)
         z = hex[m-i-1];
         hex[m-i-1] = hex[i];
         hex[i] =  z;
-
     }
     return hex;
-
 }
+
 // To Check whether whether it is immediate addressing OR indirect addressing
+/*#0
+ *@1
+ *default 2
+ * */
 int CheckDir_Indir(string a)
 {
     if(a[0]=='#')
-    return 0;
+		 return 0;
     else if(a[0]=='@')
          return 1;
-         else
+    else
          return 2;
 }
+
 // To Check Whether it is a Operation or RESB , RESW , WORD ,BYTE
 bool CheckOPTAB(string a)
 {
     for(int i=0;i<45;i++)
        if(OPTAB[i][0]==a)
        return 1;
-
     return 0;
 }
+
 // To check format 3 OR 4
 string CheckFormat(string a)
 {
@@ -97,7 +110,7 @@ string CheckFormat(string a)
     //    a=a.substr(1,a.length());
         return "4";
     }
-    else if(CheckOPTAB(a))// Checks whether it is operation or not and then return where it is Format 3 OR Format 2
+    else if(CheckOPTAB(a))// Checks whether it is operation or not and then return wether it is Format 3 OR Format 2
          {
              for(int i=0;i<45;i++)
              if(OPTAB[i][0]==a)
@@ -126,6 +139,7 @@ bool CheckSYMTAB(string a)
     }
     return 0;
 }
+
 // Inserting label in SYMTAB
 void Insert_SYMTAB(string a)
 {
@@ -138,6 +152,7 @@ void Insert_SYMTAB(string a)
     SYMTAB[c+1][0]="END";
     return;
 }
+
 // Inserting address for label in SYMTAB
 void Insert_SYMTAB_Addr(string a,string addr)
 {
@@ -155,7 +170,9 @@ void Insert_SYMTAB_Addr(string a,string addr)
     SYMTAB[c][1]=addr;
     SYMTAB[c+1][0]="END";
 }
+
 vector<string> explode( const string &delimiter, const string &explodeme);
+
 int main()
 {
     SYMTAB[0][0]="START";
@@ -164,11 +181,11 @@ int main()
     string str;
     in.open("work.txt");
     getline(in,str);
-    int f=0,h=1,count=0;//count is no
+    int f=0,h=1,count=0;//count is number of rows, f is used to traverse the array and h is the column number
     while(str!="END")
     {
           vector<string> v = explode(" ", str);
-          while(v[f]=="")
+          while(v[f]=="")// used to eliminate the whitespaces at the begining of each line
           {
               f=f+1;
               h=2;
@@ -176,37 +193,32 @@ int main()
           for(int j=f;j<(v.size());j++)
           {
               n[count][h]=v[j];
-
               if(h==2)
                   n[count][4]=CheckFormat(n[count][h]);
-
               h=h+1;
           }
-
         v.clear();
         getline(in, str);
         count++;h=1;f=0;
     }
-     in.close();
-     n[count][1]="END";
-     // Location Pointer
-     string ProgAddr=n[0][3];
-     n[0][0]=ProgAddr;
-     string loc=ProgAddr;
-
-     for(int i=1;i<count;i++)
-     {
+    in.close();
+    n[count][1]="END";
+    string ProgAddr=n[0][3];
+    n[0][0]=ProgAddr;
+    string loc=ProgAddr;// Location Pointer
+    for(int i=1;i<count;i++)
+    {
         n[i][0]=loc;
         int label=atoi(n[i][4].c_str());
         switch(label)
         {
-            case 2:
+            case 2://Format 2 : allowed operations  ADDR SUBR TIXR
             {
                 string temp=n[i][3];
                 if(temp=="T")
-                n[i][6]=OPCode(n[i][2])+"50";
+					n[i][6]=OPCode(n[i][2])+"50";
                 else if(temp=="S")
-                n[i][6]=OPCode(n[i][2])+"40";
+					n[i][6]=OPCode(n[i][2])+"40";
                 else
                 {
                     for(int j=0;j<6;j++)
@@ -225,53 +237,52 @@ int main()
                 loc=add(loc,"2");
                 break;
             }
-            case 3:
+            case 3://Format 3 : allowed 
             {
-
-                if(CheckDir_Indir(n[i][3])==2&&!CheckSYMTAB(n[i][3]))  //
-                   {
-                       Insert_SYMTAB(n[i][3]);
-                       n[i][5]="0";
-                       if(n[i][1]!="")
-                       {
-                           Insert_SYMTAB(n[i][1]);
-                           Insert_SYMTAB_Addr(n[i][1],loc);
-                       }
-                   }
-                   else if(CheckDir_Indir(n[i][3])==0)
-                        {
-                            n[i][5]="1"; //Immediate addressing
+                if(CheckDir_Indir(n[i][3])==2&&!CheckSYMTAB(n[i][3]))  //To check the addressing
+                {
+						Insert_SYMTAB(n[i][3]);
+						n[i][5]="0";
+						if(n[i][1]!="")
+						{
+							Insert_SYMTAB(n[i][1]);
+							Insert_SYMTAB_Addr(n[i][1],loc);
+						}
+				}
+                else if(CheckDir_Indir(n[i][3])==0)
+					{
+							n[i][5]="1"; //Immediate addressing
                             n[i][6]=n[i][3].substr(1,n[i][3].length());// This is to modify 12 to 012
                             string temp;
                             for(int j=0;j<(3-n[i][6].length());j++)
                             temp+="0";
                             n[i][6]=temp+n[i][6];
-                        }
-                        else if(CheckDir_Indir(n[i][3])==1)
-                             {
-                                 n[i][5]="2"; //Indirect addressing
+                     }
+                else if(CheckDir_Indir(n[i][3])==1)
+                     {
+								n[i][5]="2"; //Indirect addressing
                                 n[i][3]=n[i][3].substr(1,n[i][3].length());// This is to modify 12 to 012
-                            string temp;
-                            for(int j=0;j<(3-temp.length());j++)
-                            temp+="0";
-                            n[i][6]=temp+n[i][3];
-                            }
+								string temp;
+								for(int j=0;j<(3-temp.length());j++)
+								temp+="0";
+								n[i][6]=temp+n[i][3];
+                       }
                 loc=add(loc,"3");
                 break;
             }
-            case 4:
+            case 4://Format 4
             {
                 loc=add(loc,"4");
                 break;
             }
-            case 5:
+            case 5://WORD
             {
                 n[i][5]="4";
                 Insert_SYMTAB_Addr(n[i][1],loc);
                 loc=add(loc,"3");
                 break;
             }
-            case 6:
+            case 6://RESW
             {
                 n[i][5]="4";
                 Insert_SYMTAB_Addr(n[i][1],loc);
@@ -281,14 +292,14 @@ int main()
                 loc=add(loc,temp);
                 break;
             }
-            case 7:
+            case 7://BYTE
             {
                 n[i][5]="4";
                 Insert_SYMTAB_Addr(n[i][1],loc);
                 loc=add(loc,"1");
                 break;
             }
-            case 8:
+            case 8://RESB
             {
                 n[i][5]="4";
                 Insert_SYMTAB_Addr(n[i][1],loc);
@@ -300,12 +311,12 @@ int main()
 
         }
      }
-     n[count][0]=loc;
+     n[count][0]=loc;// These statements are for the last line
      n[count][2]=ProgAddr;
      string ProgLength=difference(n[count][0],ProgAddr); // Program Length is Stored
 
-    for(int y=0;y<count+1;y++)
-        {
+     for(int y=0;y<count+1;y++)
+		{
                 for(int l=0;l<5;l++)
                 {
                         cout<<setfill(' ')<<setw(8)<<n[y][l]<<" ";
@@ -315,26 +326,28 @@ int main()
     int c=0;
     cout<<endl;
     cout<<"SYMTAB is"<<endl;
-    while(SYMTAB[c][0]!="END")
+    while(SYMTAB[c][0]!="END")//To print the symbol table
     {
         cout<<setfill(' ')<<setw(8)<<SYMTAB[c][0]<<"  "<<setw(8)<<SYMTAB[c][1]<<endl;
         c++;
     }
     cout<<"END"<<endl;
+    
     // Code for PASS 2 begins here
+    
     cout<<"Code for PASS 2 begins here"<<endl;
     for(int i=1;i<count;i++)
     {
          if(n[i][5]=="1") //Immediate Addressing
          {
-             string temp1;
+             //string temp1;
              //temp1=difference(SYMField(n[i][6]),n[i+1][0]);
              //temp1=temp1.substr(1,temp1.length());
              n[i][6]=(add(OPCode(n[i][2]),"1")+"0"+n[i][6]);
          }
          else if(n[i][5]=="2")  // Indirect Addressing
          {
-             string temp1;
+             //string temp1;
              //temp1=difference(SYMField(n[i][6]),n[i+1][0]);
              //temp1=temp1.substr(1,temp1.length());
              n[i][6]=(add(OPCode(n[i][2]),"2")+"0"+n[i][6]);
@@ -349,13 +362,13 @@ int main()
              //temp1=temp1.substr(1,temp1.length());
              string temp1;
              string temp=add(OPCode(n[i][2]),"3");
-             temp=temp+"2";
+             temp=temp+"2";//program counter realtive
              temp1=difference(SYMField(n[i][3]),n[i+1][0]);
              temp1=temp1.substr(1,temp1.length());
              temp=temp+temp1;
              n[i][6]=temp;
          }
-         else if(n[i][4]!="2")
+         else if(n[i][4]!="2")//format 2
          {
              n[i][6]="";
          }
@@ -393,15 +406,14 @@ int main()
 
 }
 
-vector<string> explode( const string &delimiter, const string &str)
+vector<string> explode( const string &delimiter, const string &str)//This is the function to break the string ( similar to explode function of php)
 {
     vector<string> arr;
-
     int strleng = str.length();
     int delleng = delimiter.length();
     if (delleng==0)
         return arr;//no change
-
+        
     int i=0;
     int k=0;
     while( i<strleng )
