@@ -457,7 +457,7 @@ int main()
     ofstream out;
     string interm_Addr=ProgAddr;
     out.open("OUTPUT.txt");
-    out<<"H|"<<setfill(' ')<<setw(6)<<n[0][1]<<"|"<<setfill('0')<<setw(6)<<ProgAddr<<"|"<<setw(6)<<ProgLength<<endl;
+    out<<"H|"<<n[0][1]<<" |"<<setfill('0')<<setw(6)<<ProgAddr<<"|"<<setw(6)<<ProgLength<<endl;
     while(y1==0)
     {
             c1=0;
