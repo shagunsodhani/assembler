@@ -16,6 +16,7 @@ using namespace std;
 #include "subtract.cpp"
 #include "check.cpp"
 #include "difference.cpp"
+#include "palindrome.cpp"
 
 string n[20][7];
 // First Column Adddress Second Column Label
@@ -200,11 +201,12 @@ vector<string> explode( const string &delimiter, const string &explodeme);
 
 int main()
 {
+    pali();
     SYMTAB[0][0]="START";
     SYMTAB[1][0]="END";
     ifstream in;
     string str;
-    in.open("work.txt");
+    in.open("input.txt");
     getline(in,str);
     int f=0,h=1,count=0;//count is number of rows, f is used to traverse the array and h is the column number
     while(str!="END")
@@ -455,28 +457,38 @@ int main()
     ofstream out;
     string interm_Addr=ProgAddr;
     out.open("OUTPUT.txt");
-    out<<"H|"<<<<n[0][1]<<" |"<<setfill('0')<<setw(6)<<ProgAddr<<"|"<<setw(6)<<ProgLength<<endl;
+    out<<"H|"<<setfill(' ')<<setw(6)<<n[0][1]<<"|"<<setfill('0')<<setw(6)<<ProgAddr<<"|"<<setw(6)<<ProgLength<<endl;
     while(y1==0)
     {
             c1=0;
             for(u=u1;;u++)
             {
+                int temp2=c1;
                     if (n[u][4]=="2")
-                    c1+=2;
+                    temp2+=2;
                     else if (n[u][4]=="3")
-                    c1+=3;
+                    temp2+=3;
                     else if(n[u][4]=="4")
-                    c1+=4;
-                    else if(c1!=0)
+                    temp2+=4;
+                    else if(temp2!=0)
                     break;
-
-                    if(c1==30 || u>count)
-                    break;
+                    if(temp2<30)
+                    c1=temp2;
+                    if(temp2==30 || u>count)
+                    {
+                        c1=temp2;
+                        break;
+                    }
+                    else if(temp2>30)
+                    {
+                        u=u-1;
+                        break;}
 
             }
             u1=u+1;
             if(c1<=30)
             y1=1;
+
     out<<"T|";
     out<<setfill('0')<<setw(6)<<flag<<"|"<<setw(2)<<hexcnvt2(c1)<<"|";
     for(int i=t1;i<=u;i++)
@@ -491,8 +503,9 @@ int main()
             t1=t1+1;
     }
     flag=n[t1][0];
-    if(u<count)
+    if(t1<count)
     y1=0;
+
     }
 
     for(int i=1;i<count;i++)
